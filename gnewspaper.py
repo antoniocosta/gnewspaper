@@ -20,6 +20,7 @@ Example:
 
 import base64
 import json
+import random
 import re
 import requests
 from datetime import datetime, date
@@ -33,8 +34,21 @@ from urllib.parse import urlencode
 
 GOOGLE_NEWS_URL = "https://news.google.com"
 
-# Main topics that use Freebase MID encoding
+# User agents for rotation (subset from GNews)
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0",
+    "Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+]
+
+# Topic name to Freebase MID mapping (extracted from GNews tokens)
 TOPIC_MIDS = {
+    # Main topics
     "world": "/m/09nm_",
     "nation": "/m/09c7w0",
     "business": "/m/09s1f",
@@ -43,89 +57,93 @@ TOPIC_MIDS = {
     "sports": "/m/06ntj",
     "science": "/m/06mq7",
     "health": "/m/0kt51",
-}
-
-# Additional topics that use pre-computed tokens (GNews-compatible)
-# These tokens are locale-independent and work directly with /topics/ URLs
-TOPIC_TOKENS = {
     # Politics & Culture
-    "politics": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFZ4ZERBU0FtVnVLQUFQAQ",
-    "celebrities": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREZ5Wm5vU0FtVnVLQUFQAQ",
-    "tv": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRGRqTlRJU0FtVnVLQUFQAQ",
-    "music": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFJ5YkdZU0FtVnVLQUFQAQ",
-    "movies": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREoyZUc0U0FtVnVLQUFQAQ",
-    "theater": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNRE54YzJSd2F4SUNaVzRvQUFQAQ",
+    "politics": "/m/05qt0",
+    "celebrities": "/m/01rfz",
+    "tv": "/m/07c52",
+    "music": "/m/04rlf",
+    "movies": "/m/02vxn",
+    "theater": "/m/03qsdpk",
     # Sports
-    "soccer": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREoyZURRU0FtVnVLQUFQAQ",
-    "cycling": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREZ6WjJ3U0FtVnVLQUFQAQ",
-    "motor sports": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNRFF4TUhSMGFCSUNaVzRvQUFQAQ",
-    "tennis": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRGRpY3pBU0FtVnVLQUFQAQ",
-    "combat sports": "CAAqIggKIhxDQkFTRHdvSkwyMHZNRFZyWXpJNUVnSmxiaWdBUAE",
-    "basketball": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREU0ZHpnU0FtVnVLQUFQAQ",
-    "baseball": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREU0YW5vU0FtVnVLQUFQAQ",
-    "football": "CAAqIAgKIhpDQkFTRFFvSEwyMHZNR3B0WHhJQ1pXNG9BQVAB",
-    "sports betting": "CAAqIggKIhxDQkFTRHdvSkwyMHZNRFIwTXpsa0VnSmxiaWdBUAE",
-    "water sports": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREptYUdSbUVnSmxiaWdBUAE",
-    "hockey": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE4wYlhJU0FtVnVLQUFQAQ",
-    "golf": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE0zYUhvU0FtVnVLQUFQAQ",
-    "cricket": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRGw0Y0Y4U0FtVnVLQUFQAQ",
-    "rugby": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFppY2pnU0FtVnVLQUFQAQ",
+    "soccer": "/m/02vx4",
+    "cycling": "/m/01sgl",
+    "motor sports": "/m/0410tth",
+    "tennis": "/m/07bs0",
+    "combat sports": "/m/05kc29",
+    "basketball": "/m/018w8",
+    "baseball": "/m/018jz",
+    "football": "/m/0jm_",
+    "sports betting": "/m/04t39d",
+    "water sports": "/m/02fhdf",
+    "hockey": "/m/03tmr",
+    "golf": "/m/037hz",
+    "cricket": "/m/09xp_",
+    "rugby": "/m/06br8",
     # Business & Finance
-    "economy": "CAAqIggKIhxDQkFTRHdvSkwyMHZNR2RtY0hNekVnSmxiaWdBUAE",
-    "personal finance": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREY1Tm1OeEVnSmxiaWdBUAE",
-    "finance": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREpmTjNRU0FtVnVLQUFQAQ",
-    "digital currencies": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNSEk0YkhsM054SUNaVzRvQUFQAQ",
+    "economy": "/m/0gfps3",
+    "personal finance": "/m/01y6cq",
+    "finance": "/m/02_7t",
+    "digital currencies": "/m/0r8lyw7",
     # Technology
-    "mobile": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFV3YXpnU0FtVnVLQUFQAQ",
-    "energy": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREp0YlY4U0FtVnVLQUFQAQ",
-    "gaming": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREZ0ZHpFU0FtVnVLQUFQAQ",
-    "internet security": "CAAqIggKIhxDQkFTRHdvSkwyMHZNRE5xWm01NEVnSmxiaWdBUAE",
-    "gadgets": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREp0WmpGdUVnSmxiaWdBUAE",
-    "virtual reality": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRGRmYm5rU0FtVnVLQUFQAQ",
-    "robotics": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNREp3TUhRMVpoSUNaVzRvQUFQAQ",
+    "mobile": "/m/050k8",
+    "energy": "/m/02mm_",
+    "gaming": "/m/01mw1",
+    "internet security": "/m/03jfnx",
+    "gadgets": "/m/02mf1n",
+    "virtual reality": "/m/07_ny",
+    "robotics": "/m/02p0t5f",
     # Health & Science
-    "nutrition": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFZrYW1NU0FtVnVLQUFQAQ",
-    "public health": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREpqYlRZeEVnSmxiaWdBUAE",
-    "mental health": "CAAqIggKIhxDQkFTRHdvSkwyMHZNRE40TmpsbkVnSmxiaWdBUAE",
-    "medicine": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFJ6YURNU0FtVnVLQUFQAQ",
-    "space": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREU0TXpOM0VnSmxiaWdBUAE",
-    "wildlife": "CAAqJAgKIh5DQkFTRUFvS0wyY3ZNVE5pWWw5MGN4SUNaVzRvQUFQAQ",
-    "environment": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREp3ZVRBNUVnSmxiaWdBUAE",
-    "neuroscience": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFZpTm1NU0FtVnVLQUFQAQ",
-    "physics": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFZ4YW5RU0FtVnVLQUFQAQ",
-    "geology": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE0yYUhZU0FtVnVLQUFQAQ",
-    "paleontology": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFZ5YW13U0FtVnVLQUFQAQ",
-    "social sciences": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFp1Tm5BU0FtVnVLQUFQAQ",
+    "nutrition": "/m/05djc",
+    "public health": "/m/02cm61",
+    "mental health": "/m/03x69g",
+    "medicine": "/m/04sh3",
+    "space": "/m/01833w",
+    "wildlife": "/g/13bb_ts",
+    "environment": "/m/02py09",
+    "neuroscience": "/m/05b6c",
+    "physics": "/m/05qjt",
+    "geology": "/m/036hv",
+    "paleontology": "/m/05rjl",
+    "social sciences": "/m/06n6p",
     # Lifestyle
-    "education": "CAAqJQgKIh9DQkFTRVFvTEwyY3ZNVEl4Y0Raa09UQVNBbVZ1S0FBUAE",
-    "jobs": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNRFF4TVRWME1oSUNaVzRvQUFQAQ",
-    "online education": "CAAqIggKIhxDQkFTRHdvSkwyMHZNRFYwYW5KaUVnSmxiaWdBUAE",
-    "higher education": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE55TlRVU0FtVnVLQUFQAQ",
-    "vehicles": "CAAqIAgKIhpDQkFTRFFvSEwyMHZNR3MwYWhJQ1pXNG9BQVAB",
-    "arts-design": "CAAqIAgKIhpDQkFTRFFvSEwyMHZNR3BxZHhJQ1pXNG9BQVAB",
-    "beauty": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREZtTkRNU0FtVnVLQUFQAQ",
-    "food": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREozWW0wU0FtVnVLQUFQAQ",
-    "travel": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREUwWkhONEVnSmxiaWdBUAE",
-    "shopping": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNR2hvWkdJU0FtVnVLQUFQAQ",
-    "home": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREZzTUcxM0VnSmxiaWdBUAE",
-    "outdoors": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNRFZpTUc0M2F4SUNaVzRvQUFQAQ",
-    "fashion": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE15ZEd3U0FtVnVLQUFQAQ",
+    "education": "/g/121p6d90",
+    "jobs": "/m/04115t2",
+    "online education": "/m/05tjrb",
+    "higher education": "/m/03r55",
+    "vehicles": "/m/0k4j",
+    "arts-design": "/m/0jjw",
+    "beauty": "/m/01f43",
+    "food": "/m/02wbm",
+    "travel": "/m/014dsx",
+    "shopping": "/m/0hhdb",
+    "home": "/m/01l0mw",
+    "outdoors": "/m/05b0n7k",
+    "fashion": "/m/032tl",
 }
 
-# All available topics (main + additional)
-TOPICS = list(TOPIC_MIDS.keys()) + list(TOPIC_TOKENS.keys())
+# All available topics
+TOPICS = list(TOPIC_MIDS.keys())
 
 
 # =============================================================================
 # TOPIC ID ENCODING
 # =============================================================================
 
-def _encode_topic_id(topic: str, language: str, country: str) -> str:
-    """Encode a topic ID for Google News."""
-    mid = TOPIC_MIDS.get(topic.lower())
-    if not mid:
-        raise ValueError(f"Unknown topic: {topic}. Available: {list(TOPIC_MIDS.keys())}")
+def _encode_topic_id(mid: str, language: str) -> str:
+    """
+    Encode a topic ID for Google News (GNews-compatible format).
 
+    This encoding matches the format used by GNews library and supports
+    any language. The format only includes language (no country) in the
+    inner protobuf message.
+
+    Args:
+        mid: Freebase MID (e.g., "/m/02vx4" for soccer)
+        language: Language code (e.g., "en", "de", "pt-419")
+
+    Returns:
+        Base64-encoded topic ID string for use with /topics/ URLs
+    """
     def encode_varint(n: int) -> bytes:
         result = []
         while n > 127:
@@ -134,29 +152,33 @@ def _encode_topic_id(topic: str, language: str, country: str) -> str:
         result.append(n)
         return bytes(result)
 
-    def encode_string(field_num: int, s: str) -> bytes:
+    def encode_string_field(field_num: int, s: str) -> bytes:
         data = s.encode("utf-8")
-        header = (field_num << 3) | 2
+        header = (field_num << 3) | 2  # wire type 2 = length-delimited
         return bytes([header]) + encode_varint(len(data)) + data
 
-    inner_msg = encode_string(1, mid)
-    inner_msg += encode_string(2, language.lower())
-    inner_msg += encode_string(3, country.upper())
+    # Inner nested message: field 1 = MID, field 2 = language
+    inner_nested = encode_string_field(1, mid)
+    inner_nested += encode_string_field(2, language)
 
-    inner = bytes([0x08, 0x10])
-    inner += bytes([0x12, len(inner_msg)]) + inner_msg
-    inner += bytes([0x28, 0x00])
+    # Inner message: field 1 = 16, field 2 = nested, field 5 = 0
+    inner = bytes([0x08, 0x10])  # field 1, value 16
+    inner += bytes([0x12, len(inner_nested)]) + inner_nested  # field 2
+    inner += bytes([0x28, 0x00])  # field 5, value 0
 
-    inner_b64 = base64.b64encode(inner).decode("ascii").rstrip("=")
+    # Base64 encode inner (URL-safe, no padding)
+    inner_b64 = base64.urlsafe_b64encode(inner).rstrip(b'=').decode('ascii')
 
-    middle = bytes([0x08, 0x0a])
-    middle += encode_string(4, inner_b64)
-    middle += bytes([0x50, 0x01])
+    # Middle message: field 1 = 10, field 4 = base64, field 10 = 1
+    middle = bytes([0x08, 0x0a])  # field 1, value 10
+    middle += encode_string_field(4, inner_b64)
+    middle += bytes([0x50, 0x01])  # field 10, value 1
 
-    outer = bytes([0x08, 0x00])
-    outer += bytes([0x2a, len(middle)]) + middle
+    # Outer message: field 1 = 0, field 5 = middle
+    outer = bytes([0x08, 0x00])  # field 1, value 0
+    outer += bytes([0x2a, len(middle)]) + middle  # field 5
 
-    return base64.b64encode(outer).decode("ascii").rstrip("=")
+    return base64.urlsafe_b64encode(outer).rstrip(b'=').decode('ascii')
 
 
 # =============================================================================
@@ -214,7 +236,7 @@ class GNews:
 
         self._session = requests.Session()
         self._session.headers.update({
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+            "User-Agent": random.choice(USER_AGENTS),
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         })
         if proxy:
@@ -616,14 +638,11 @@ class GNews:
             >>> clustered = google_news.get_news_by_topic('TECHNOLOGY', clustered=True)
         """
         topic_lower = topic.lower()
-        if topic_lower not in TOPIC_MIDS and topic_lower not in TOPIC_TOKENS:
+        if topic_lower not in TOPIC_MIDS:
             raise ValueError(f"Invalid topic: {topic}. Available: {TOPICS}")
 
-        # Use MID encoding for main topics, pre-computed tokens for additional topics
-        if topic_lower in TOPIC_MIDS:
-            topic_id = _encode_topic_id(topic_lower, self._language, self._country)
-        else:
-            topic_id = TOPIC_TOKENS[topic_lower]
+        mid = TOPIC_MIDS[topic_lower]
+        topic_id = _encode_topic_id(mid, self._language)
         url = self._build_url(f"/topics/{topic_id}")
         html = self._fetch(url)
         ds_data = self._extract_data(html)
