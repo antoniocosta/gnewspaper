@@ -1,0 +1,19 @@
+# Claude
+.claude/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+.directory
+
+# Project
+tmp/
