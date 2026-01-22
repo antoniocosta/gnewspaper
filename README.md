@@ -323,10 +323,11 @@ The API methods are compatible. Article schema differences:
 | GNews | GNewspaper |
 |-------|------------|
 | `published date` | `published_date` |
-| `description` | (removed - always empty) |
-| `publisher.href` | `publisher.favicon` |
+| `description` | (removed - always empty in RSS) |
+| `publisher` (string) | `publisher.title` (string) |
 
 Additional fields in GNewspaper:
+- `publisher.favicon` - Publisher's favicon URL
 - `published_timestamp` - Unix timestamp
 - `authors` - List of author names
 - `image` - Article thumbnail URL
