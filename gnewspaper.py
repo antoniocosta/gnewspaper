@@ -35,6 +35,7 @@ GOOGLE_NEWS_URL = "https://news.google.com"
 
 # Topic name to Freebase MID mapping
 TOPIC_MIDS = {
+    # Main topics
     "world": "/m/09nm_",
     "nation": "/m/09c7w0",
     "business": "/m/09s1f",
@@ -43,10 +44,72 @@ TOPIC_MIDS = {
     "sports": "/m/06ntj",
     "science": "/m/06mq7",
     "health": "/m/0kt51",
+    # Politics & Culture
+    "politics": "/m/05qt0",
+    "celebrities": "/m/026t6",
+    "tv": "/m/01lj9",
+    "music": "/m/05qjt",
+    "movies": "/m/02vxn",
+    "theater": "/m/01c2_0",
+    # Sports
+    "soccer": "/m/02vx4",
+    "cycling": "/m/03c7kzv",
+    "motor sports": "/m/083_h",
+    "tennis": "/m/07bs0",
+    "combat sports": "/m/01bvx",
+    "basketball": "/m/018w8",
+    "baseball": "/m/018jz",
+    "football": "/m/079cl",
+    "sports betting": "/m/05v1x6",
+    "water sports": "/m/0194d",
+    "hockey": "/m/05xnv",
+    "golf": "/m/06vbd",
+    "cricket": "/m/0jm_",
+    "rugby": "/m/04y7b",
+    # Business & Finance
+    "economy": "/m/02j62",
+    "personal finance": "/m/0gnwz4",
+    "finance": "/m/01v9724",
+    "digital currencies": "/m/01d9ll",
+    # Technology
+    "mobile": "/m/03_d0",
+    "energy": "/m/0glt670",
+    "gaming": "/m/01mw1",
+    "internet security": "/m/0dyc2c",
+    "gadgets": "/m/063km",
+    "virtual reality": "/m/03qbcv",
+    "robotics": "/m/02_h0",
+    # Health & Science
+    "nutrition": "/m/05qjc",
+    "public health": "/m/0g71qc",
+    "mental health": "/m/039jq",
+    "medicine": "/m/04zrq",
+    "space": "/m/01lyb",
+    "wildlife": "/m/05t4q",
+    "environment": "/m/01cbzq",
+    "neuroscience": "/m/07ygz",
+    "physics": "/m/0hkf",
+    "geology": "/m/036hv",
+    "paleontology": "/m/0263lr1",
+    "social sciences": "/m/0gl9p",
+    # Lifestyle
+    "education": "/m/01h6rj",
+    "jobs": "/m/0158vt",
+    "online education": "/m/01rzcn",
+    "higher education": "/m/03r8gp",
+    "vehicles": "/m/03w6kx",
+    "arts-design": "/m/0c7hdf",
+    "beauty": "/m/07khblk",
+    "food": "/m/0c2wf",
+    "travel": "/m/0mkz",
+    "shopping": "/m/01q4y",
+    "home": "/m/0f15k",
+    "outdoors": "/m/07h26",
+    "fashion": "/m/0d8wb",
 }
 
 # GNews-compatible topic names (uppercase)
-TOPICS = ["WORLD", "NATION", "BUSINESS", "TECHNOLOGY", "ENTERTAINMENT", "SPORTS", "SCIENCE", "HEALTH"]
+TOPICS = list(k.upper() for k in TOPIC_MIDS.keys())
 
 
 # =============================================================================
@@ -536,9 +599,9 @@ class GNews:
         Get news by topic category.
 
         Args:
-            topic: Topic name (case-insensitive). One of:
-                   WORLD, NATION, BUSINESS, TECHNOLOGY,
-                   ENTERTAINMENT, SPORTS, SCIENCE, HEALTH
+            topic: Topic name (case-insensitive). See TOPICS for available options.
+                   Examples: WORLD, NATION, BUSINESS, TECHNOLOGY, ENTERTAINMENT,
+                   SPORTS, SCIENCE, HEALTH, POLITICS, SOCCER, GAMING, etc.
             clustered: If True, returns articles grouped in clusters
 
         Returns:
@@ -661,7 +724,7 @@ def main():
     )
 
     parser.add_argument("query", nargs="?", help="Search query")
-    parser.add_argument("--topic", "-t", choices=[t.lower() for t in TOPICS], help="Topic")
+    parser.add_argument("--topic", "-t", choices=list(TOPIC_MIDS.keys()), help="Topic")
     parser.add_argument("--language", "-l", default="en", help="Language (default: en)")
     parser.add_argument("--country", "-c", default="us", help="Country (default: us)")
     parser.add_argument("--max", "-m", type=int, default=10, help="Max results (default: 10)")

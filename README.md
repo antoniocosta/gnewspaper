@@ -111,9 +111,10 @@ clusters = google_news.get_top_news(clustered=True)
 Get news by topic category.
 
 ```python
-# Available topics: WORLD, NATION, BUSINESS, TECHNOLOGY,
-#                   ENTERTAINMENT, SPORTS, SCIENCE, HEALTH
+# See 'Available Topics' section for full list
 tech = google_news.get_news_by_topic('TECHNOLOGY')
+soccer = google_news.get_news_by_topic('SOCCER')
+gaming = google_news.get_news_by_topic('GAMING')
 ```
 
 #### `get_news_by_location(location: str, clustered: bool = False) -> List[Dict]`
@@ -241,28 +242,144 @@ google_news.end_date = (2024, 12, 31)
 
 ## Available Topics
 
-| Topic | Description |
-|-------|-------------|
-| `WORLD` | International news |
-| `NATION` | Country-specific news |
-| `BUSINESS` | Business and finance |
-| `TECHNOLOGY` | Tech news |
-| `ENTERTAINMENT` | Entertainment news |
-| `SPORTS` | Sports news |
-| `SCIENCE` | Science news |
-| `HEALTH` | Health news |
+**Main Topics:**
+`WORLD`, `NATION`, `BUSINESS`, `TECHNOLOGY`, `ENTERTAINMENT`, `SPORTS`, `SCIENCE`, `HEALTH`
 
-## Supported Locales
+**Politics & Culture:**
+`POLITICS`, `CELEBRITIES`, `TV`, `MUSIC`, `MOVIES`, `THEATER`
 
-Use lowercase codes:
+**Sports:**
+`SOCCER`, `CYCLING`, `MOTOR SPORTS`, `TENNIS`, `COMBAT SPORTS`, `BASKETBALL`, `BASEBALL`, `FOOTBALL`, `SPORTS BETTING`, `WATER SPORTS`, `HOCKEY`, `GOLF`, `CRICKET`, `RUGBY`
 
-```python
-# Languages
-'en', 'es', 'fr', 'de', 'pt', 'it', 'ja', 'ko', 'zh', 'ar', 'ru', ...
+**Business & Finance:**
+`ECONOMY`, `PERSONAL FINANCE`, `FINANCE`, `DIGITAL CURRENCIES`
 
-# Countries
-'us', 'gb', 'ca', 'au', 'in', 'de', 'fr', 'es', 'br', 'mx', 'jp', ...
-```
+**Technology:**
+`MOBILE`, `ENERGY`, `GAMING`, `INTERNET SECURITY`, `GADGETS`, `VIRTUAL REALITY`, `ROBOTICS`
+
+**Health & Science:**
+`NUTRITION`, `PUBLIC HEALTH`, `MENTAL HEALTH`, `MEDICINE`, `SPACE`, `WILDLIFE`, `ENVIRONMENT`, `NEUROSCIENCE`, `PHYSICS`, `GEOLOGY`, `PALEONTOLOGY`, `SOCIAL SCIENCES`
+
+**Lifestyle:**
+`EDUCATION`, `JOBS`, `ONLINE EDUCATION`, `HIGHER EDUCATION`, `VEHICLES`, `ARTS-DESIGN`, `BEAUTY`, `FOOD`, `TRAVEL`, `SHOPPING`, `HOME`, `OUTDOORS`, `FASHION`
+
+## Supported Languages
+
+| Language | Code |
+|----------|------|
+| English | `en` |
+| Indonesian | `id` |
+| Czech | `cs` |
+| German | `de` |
+| Spanish | `es-419` |
+| French | `fr` |
+| Italian | `it` |
+| Latvian | `lv` |
+| Lithuanian | `lt` |
+| Hungarian | `hu` |
+| Dutch | `nl` |
+| Norwegian | `no` |
+| Polish | `pl` |
+| Portuguese (Brazil) | `pt-419` |
+| Portuguese (Portugal) | `pt-150` |
+| Romanian | `ro` |
+| Slovak | `sk` |
+| Slovenian | `sl` |
+| Swedish | `sv` |
+| Vietnamese | `vi` |
+| Turkish | `tr` |
+| Greek | `el` |
+| Bulgarian | `bg` |
+| Russian | `ru` |
+| Serbian | `sr` |
+| Ukrainian | `uk` |
+| Hebrew | `he` |
+| Arabic | `ar` |
+| Marathi | `mr` |
+| Hindi | `hi` |
+| Bengali | `bn` |
+| Tamil | `ta` |
+| Telugu | `te` |
+| Malayalam | `ml` |
+| Thai | `th` |
+| Chinese (Simplified) | `zh-Hans` |
+| Chinese (Traditional) | `zh-Hant` |
+| Japanese | `ja` |
+| Korean | `ko` |
+
+## Supported Countries
+
+| Country | Code |
+|---------|------|
+| Australia | `AU` |
+| Botswana | `BW` |
+| Canada | `CA` |
+| Ethiopia | `ET` |
+| Ghana | `GH` |
+| India | `IN` |
+| Indonesia | `ID` |
+| Ireland | `IE` |
+| Israel | `IL` |
+| Kenya | `KE` |
+| Latvia | `LV` |
+| Malaysia | `MY` |
+| Namibia | `NA` |
+| New Zealand | `NZ` |
+| Nigeria | `NG` |
+| Pakistan | `PK` |
+| Philippines | `PH` |
+| Singapore | `SG` |
+| South Africa | `ZA` |
+| Tanzania | `TZ` |
+| Uganda | `UG` |
+| United Kingdom | `GB` |
+| United States | `US` |
+| Zimbabwe | `ZW` |
+| Czech Republic | `CZ` |
+| Germany | `DE` |
+| Austria | `AT` |
+| Switzerland | `CH` |
+| Argentina | `AR` |
+| Chile | `CL` |
+| Colombia | `CO` |
+| Cuba | `CU` |
+| Mexico | `MX` |
+| Peru | `PE` |
+| Venezuela | `VE` |
+| Belgium | `BE` |
+| France | `FR` |
+| Morocco | `MA` |
+| Senegal | `SN` |
+| Italy | `IT` |
+| Lithuania | `LT` |
+| Hungary | `HU` |
+| Netherlands | `NL` |
+| Norway | `NO` |
+| Poland | `PL` |
+| Brazil | `BR` |
+| Portugal | `PT` |
+| Romania | `RO` |
+| Slovakia | `SK` |
+| Slovenia | `SI` |
+| Sweden | `SE` |
+| Vietnam | `VN` |
+| Turkey | `TR` |
+| Greece | `GR` |
+| Bulgaria | `BG` |
+| Russia | `RU` |
+| Ukraine | `UA` |
+| Serbia | `RS` |
+| United Arab Emirates | `AE` |
+| Saudi Arabia | `SA` |
+| Lebanon | `LB` |
+| Egypt | `EG` |
+| Bangladesh | `BD` |
+| Thailand | `TH` |
+| China | `CN` |
+| Taiwan | `TW` |
+| Hong Kong | `HK` |
+| Japan | `JP` |
+| South Korea | `KR` |
 
 ## Command-Line Interface
 
@@ -356,7 +473,7 @@ Topic IDs are base64-encoded protobuf messages containing:
 ```
 gnewspaper.py   # Main library (single file)
 README.md       # Documentation
-tmp/            # Development files (not needed for distribution)
+LICENSE         # MIT License
 ```
 
 ## Rate Limiting
