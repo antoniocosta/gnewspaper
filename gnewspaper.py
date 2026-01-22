@@ -33,9 +33,8 @@ from urllib.parse import urlencode
 
 GOOGLE_NEWS_URL = "https://news.google.com"
 
-# Topic name to Freebase MID mapping
+# Main topics that use Freebase MID encoding
 TOPIC_MIDS = {
-    # Main topics
     "world": "/m/09nm_",
     "nation": "/m/09c7w0",
     "business": "/m/09s1f",
@@ -44,72 +43,77 @@ TOPIC_MIDS = {
     "sports": "/m/06ntj",
     "science": "/m/06mq7",
     "health": "/m/0kt51",
-    # Politics & Culture
-    "politics": "/m/05qt0",
-    "celebrities": "/m/026t6",
-    "tv": "/m/01lj9",
-    "music": "/m/05qjt",
-    "movies": "/m/02vxn",
-    "theater": "/m/01c2_0",
-    # Sports
-    "soccer": "/m/02vx4",
-    "cycling": "/m/03c7kzv",
-    "motor sports": "/m/083_h",
-    "tennis": "/m/07bs0",
-    "combat sports": "/m/01bvx",
-    "basketball": "/m/018w8",
-    "baseball": "/m/018jz",
-    "football": "/m/079cl",
-    "sports betting": "/m/05v1x6",
-    "water sports": "/m/0194d",
-    "hockey": "/m/05xnv",
-    "golf": "/m/06vbd",
-    "cricket": "/m/0jm_",
-    "rugby": "/m/04y7b",
-    # Business & Finance
-    "economy": "/m/02j62",
-    "personal finance": "/m/0gnwz4",
-    "finance": "/m/01v9724",
-    "digital currencies": "/m/01d9ll",
-    # Technology
-    "mobile": "/m/03_d0",
-    "energy": "/m/0glt670",
-    "gaming": "/m/01mw1",
-    "internet security": "/m/0dyc2c",
-    "gadgets": "/m/063km",
-    "virtual reality": "/m/03qbcv",
-    "robotics": "/m/02_h0",
-    # Health & Science
-    "nutrition": "/m/05qjc",
-    "public health": "/m/0g71qc",
-    "mental health": "/m/039jq",
-    "medicine": "/m/04zrq",
-    "space": "/m/01lyb",
-    "wildlife": "/m/05t4q",
-    "environment": "/m/01cbzq",
-    "neuroscience": "/m/07ygz",
-    "physics": "/m/0hkf",
-    "geology": "/m/036hv",
-    "paleontology": "/m/0263lr1",
-    "social sciences": "/m/0gl9p",
-    # Lifestyle
-    "education": "/m/01h6rj",
-    "jobs": "/m/0158vt",
-    "online education": "/m/01rzcn",
-    "higher education": "/m/03r8gp",
-    "vehicles": "/m/03w6kx",
-    "arts-design": "/m/0c7hdf",
-    "beauty": "/m/07khblk",
-    "food": "/m/0c2wf",
-    "travel": "/m/0mkz",
-    "shopping": "/m/01q4y",
-    "home": "/m/0f15k",
-    "outdoors": "/m/07h26",
-    "fashion": "/m/0d8wb",
 }
 
-# GNews-compatible topic names (uppercase)
-TOPICS = list(k.upper() for k in TOPIC_MIDS.keys())
+# Additional topics that use pre-computed tokens (GNews-compatible)
+# These tokens are locale-independent and work directly with /topics/ URLs
+TOPIC_TOKENS = {
+    # Politics & Culture
+    "politics": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFZ4ZERBU0FtVnVLQUFQAQ",
+    "celebrities": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREZ5Wm5vU0FtVnVLQUFQAQ",
+    "tv": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRGRqTlRJU0FtVnVLQUFQAQ",
+    "music": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFJ5YkdZU0FtVnVLQUFQAQ",
+    "movies": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREoyZUc0U0FtVnVLQUFQAQ",
+    "theater": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNRE54YzJSd2F4SUNaVzRvQUFQAQ",
+    # Sports
+    "soccer": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREoyZURRU0FtVnVLQUFQAQ",
+    "cycling": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREZ6WjJ3U0FtVnVLQUFQAQ",
+    "motor sports": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNRFF4TUhSMGFCSUNaVzRvQUFQAQ",
+    "tennis": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRGRpY3pBU0FtVnVLQUFQAQ",
+    "combat sports": "CAAqIggKIhxDQkFTRHdvSkwyMHZNRFZyWXpJNUVnSmxiaWdBUAE",
+    "basketball": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREU0ZHpnU0FtVnVLQUFQAQ",
+    "baseball": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREU0YW5vU0FtVnVLQUFQAQ",
+    "football": "CAAqIAgKIhpDQkFTRFFvSEwyMHZNR3B0WHhJQ1pXNG9BQVAB",
+    "sports betting": "CAAqIggKIhxDQkFTRHdvSkwyMHZNRFIwTXpsa0VnSmxiaWdBUAE",
+    "water sports": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREptYUdSbUVnSmxiaWdBUAE",
+    "hockey": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE4wYlhJU0FtVnVLQUFQAQ",
+    "golf": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE0zYUhvU0FtVnVLQUFQAQ",
+    "cricket": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRGw0Y0Y4U0FtVnVLQUFQAQ",
+    "rugby": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFppY2pnU0FtVnVLQUFQAQ",
+    # Business & Finance
+    "economy": "CAAqIggKIhxDQkFTRHdvSkwyMHZNR2RtY0hNekVnSmxiaWdBUAE",
+    "personal finance": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREY1Tm1OeEVnSmxiaWdBUAE",
+    "finance": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREpmTjNRU0FtVnVLQUFQAQ",
+    "digital currencies": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNSEk0YkhsM054SUNaVzRvQUFQAQ",
+    # Technology
+    "mobile": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFV3YXpnU0FtVnVLQUFQAQ",
+    "energy": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREp0YlY4U0FtVnVLQUFQAQ",
+    "gaming": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREZ0ZHpFU0FtVnVLQUFQAQ",
+    "internet security": "CAAqIggKIhxDQkFTRHdvSkwyMHZNRE5xWm01NEVnSmxiaWdBUAE",
+    "gadgets": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREp0WmpGdUVnSmxiaWdBUAE",
+    "virtual reality": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRGRmYm5rU0FtVnVLQUFQAQ",
+    "robotics": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNREp3TUhRMVpoSUNaVzRvQUFQAQ",
+    # Health & Science
+    "nutrition": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFZrYW1NU0FtVnVLQUFQAQ",
+    "public health": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREpqYlRZeEVnSmxiaWdBUAE",
+    "mental health": "CAAqIggKIhxDQkFTRHdvSkwyMHZNRE40TmpsbkVnSmxiaWdBUAE",
+    "medicine": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFJ6YURNU0FtVnVLQUFQAQ",
+    "space": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREU0TXpOM0VnSmxiaWdBUAE",
+    "wildlife": "CAAqJAgKIh5DQkFTRUFvS0wyY3ZNVE5pWWw5MGN4SUNaVzRvQUFQAQ",
+    "environment": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREp3ZVRBNUVnSmxiaWdBUAE",
+    "neuroscience": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFZpTm1NU0FtVnVLQUFQAQ",
+    "physics": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFZ4YW5RU0FtVnVLQUFQAQ",
+    "geology": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE0yYUhZU0FtVnVLQUFQAQ",
+    "paleontology": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFZ5YW13U0FtVnVLQUFQAQ",
+    "social sciences": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRFp1Tm5BU0FtVnVLQUFQAQ",
+    # Lifestyle
+    "education": "CAAqJQgKIh9DQkFTRVFvTEwyY3ZNVEl4Y0Raa09UQVNBbVZ1S0FBUAE",
+    "jobs": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNRFF4TVRWME1oSUNaVzRvQUFQAQ",
+    "online education": "CAAqIggKIhxDQkFTRHdvSkwyMHZNRFYwYW5KaUVnSmxiaWdBUAE",
+    "higher education": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE55TlRVU0FtVnVLQUFQAQ",
+    "vehicles": "CAAqIAgKIhpDQkFTRFFvSEwyMHZNR3MwYWhJQ1pXNG9BQVAB",
+    "arts-design": "CAAqIAgKIhpDQkFTRFFvSEwyMHZNR3BxZHhJQ1pXNG9BQVAB",
+    "beauty": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREZtTkRNU0FtVnVLQUFQAQ",
+    "food": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNREozWW0wU0FtVnVLQUFQAQ",
+    "travel": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREUwWkhONEVnSmxiaWdBUAE",
+    "shopping": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNR2hvWkdJU0FtVnVLQUFQAQ",
+    "home": "CAAqIggKIhxDQkFTRHdvSkwyMHZNREZzTUcxM0VnSmxiaWdBUAE",
+    "outdoors": "CAAqJAgKIh5DQkFTRUFvS0wyMHZNRFZpTUc0M2F4SUNaVzRvQUFQAQ",
+    "fashion": "CAAqIQgKIhtDQkFTRGdvSUwyMHZNRE15ZEd3U0FtVnVLQUFQAQ",
+}
+
+# All available topics (main + additional)
+TOPICS = list(TOPIC_MIDS.keys()) + list(TOPIC_TOKENS.keys())
 
 
 # =============================================================================
@@ -612,10 +616,14 @@ class GNews:
             >>> clustered = google_news.get_news_by_topic('TECHNOLOGY', clustered=True)
         """
         topic_lower = topic.lower()
-        if topic_lower not in TOPIC_MIDS:
+        if topic_lower not in TOPIC_MIDS and topic_lower not in TOPIC_TOKENS:
             raise ValueError(f"Invalid topic: {topic}. Available: {TOPICS}")
 
-        topic_id = _encode_topic_id(topic_lower, self._language, self._country)
+        # Use MID encoding for main topics, pre-computed tokens for additional topics
+        if topic_lower in TOPIC_MIDS:
+            topic_id = _encode_topic_id(topic_lower, self._language, self._country)
+        else:
+            topic_id = TOPIC_TOKENS[topic_lower]
         url = self._build_url(f"/topics/{topic_id}")
         html = self._fetch(url)
         ds_data = self._extract_data(html)
@@ -724,7 +732,7 @@ def main():
     )
 
     parser.add_argument("query", nargs="?", help="Search query")
-    parser.add_argument("--topic", "-t", choices=list(TOPIC_MIDS.keys()), help="Topic")
+    parser.add_argument("--topic", "-t", choices=[t.lower() for t in TOPICS], help="Topic")
     parser.add_argument("--language", "-l", default="en", help="Language (default: en)")
     parser.add_argument("--country", "-c", default="us", help="Country (default: us)")
     parser.add_argument("--max", "-m", type=int, default=10, help="Max results (default: 10)")
