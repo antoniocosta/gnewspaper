@@ -451,14 +451,19 @@ GNewspaper uses Google's batchexecute protocol instead of RSS:
 1. Fetches Google News HTML pages
 2. Extracts embedded JSON data from `<script class="ds:N">` blocks
 3. Parses protobuf-like JSON structures to extract articles
-4. Encodes topic IDs using Freebase MIDs
+4. Encodes topic IDs using Freebase MIDs (GNews-compatible format)
 
 ### Topic ID Encoding
 
 Topic IDs are base64-encoded protobuf messages containing:
-- Freebase MID (e.g., `/m/07c1v` for Technology)
+- Freebase MID (e.g., `/m/02vx4` for Soccer)
 - Language code
-- Country code
+
+The encoding format matches the GNews library exactly, ensuring full multi-language support for all 60+ topics.
+
+### User Agent Rotation
+
+The library rotates through modern browser user agents (Chrome, Firefox, Safari, Edge) to reduce the chance of being flagged as a bot.
 
 ### Response Types
 
@@ -476,12 +481,61 @@ README.md       # Documentation
 LICENSE         # MIT License
 ```
 
-## Rate Limiting
+## Responsible Usage
 
-Be respectful of Google's servers:
-- Add delays between requests for bulk fetching
-- Cache responses when possible
-- The library respects `max_results` limits
+This library scrapes Google News, which has no official public API. To avoid getting rate-limited or blocked:
+
+### Recommended Practices
+
+| Practice | Recommendation |
+|----------|----------------|
+| **Delay between requests** | Minimum 1-2 seconds; 3-5 seconds for sustained use |
+| **Requests per minute** | Keep under 10-20 requests/minute |
+| **Requests per hour** | Keep under 200-300 requests/hour |
+| **Caching** | Cache responses for at least 15-30 minutes |
+| **max_results** | Use reasonable limits (10-50 for most use cases) |
+
+### Example with Delays
+
+```python
+import time
+from gnewspaper import GNews
+
+gn = GNews(language='en', country='us', max_results=10)
+
+topics = ['technology', 'science', 'health']
+results = {}
+
+for topic in topics:
+    results[topic] = gn.get_news_by_topic(topic)
+    time.sleep(2)  # Wait 2 seconds between requests
+```
+
+### For Bulk/Production Use
+
+If you need to fetch news frequently or at scale:
+
+1. **Use a caching layer** - Redis, SQLite, or file-based caching
+2. **Implement exponential backoff** - If you get errors, increase delays
+3. **Consider proxies** - Rotate IPs for high-volume use (use the `proxy` parameter)
+4. **Respect robots.txt** - Google News may block aggressive scraping
+5. **Monitor for blocks** - Watch for empty responses or HTTP errors
+
+```python
+# Example with proxy rotation
+proxies = [
+    {'http': 'http://proxy1:8080', 'https': 'http://proxy1:8080'},
+    {'http': 'http://proxy2:8080', 'https': 'http://proxy2:8080'},
+]
+
+gn = GNews(proxy=random.choice(proxies))
+```
+
+### What Happens If You're Blocked
+
+- You'll receive empty results or HTTP 429 (Too Many Requests) errors
+- Blocks are typically temporary (minutes to hours)
+- Changing IP addresses can help, but respect the implicit rate limits
 
 ## License
 
@@ -489,4 +543,4 @@ MIT License
 
 ## Disclaimer
 
-For educational and research purposes. Respect Google's Terms of Service.
+This library is for educational and research purposes. It is not affiliated with or endorsed by Google. Users are responsible for complying with Google's Terms of Service. The authors are not liable for any misuse or consequences of using this library.
